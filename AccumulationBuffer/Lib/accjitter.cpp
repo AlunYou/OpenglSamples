@@ -30,6 +30,8 @@ void accFrustrum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top,
    glMatrixMode(GL_MODELVIEW);
 
    glLoadIdentity();
+   //alun: move the object in model/world space, but because we also move a little the frustum, the focus distance objects will happen to be 
+   //moved by eyedx/focus*znear on near plane, so they'll stay in focus, not averaged.
    glTranslated(-eyedx, -eyedy, 0.0);
 }
 
