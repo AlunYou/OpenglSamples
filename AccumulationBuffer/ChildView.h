@@ -52,6 +52,11 @@ private:
       double p_radius, double p_height, int p_cnt = 30);
 	CGrCamera m_camera;
 	void ActualDraw();
+
+	bool m_antialias;
+	int m_iterations;
+public:
+	afx_msg void OnFileToggleantial();
 };
 
 /////////////////////////////////////////////////////////////////////////////

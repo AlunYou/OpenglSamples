@@ -37,6 +37,10 @@ CChildView::CChildView()
    m_camera.MouseMode(CGrCamera::PITCHYAW);
 
    SetDoubleBuffer(true);
+
+   m_antialias = false;
+   m_iterations = 16;
+   srand((unsigned int)time(NULL));
 }
 
 CChildView::~CChildView()
@@ -50,6 +54,7 @@ BEGIN_MESSAGE_MAP(CChildView,COpenGLWnd )
 	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONDOWN()
 	//}}AFX_MSG_MAP
+	ON_COMMAND(ID_FILE_TOGGLEANTIAL, &CChildView::OnFileToggleantial)
 END_MESSAGE_MAP()
 
 
@@ -108,35 +113,74 @@ void CChildView::OnGLDraw(CDC *pDC)
    // Set up the camera 
    //
 
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
+   
 
-   // Set the camera parameters
-   gluPerspective(m_camera.FieldOfView(),    // Vertical field of view in degrees.
-                  aspectratio,   // The aspect ratio.
-                  20.,           // Near clipping
-                  1000.);         // Far clipping
-
-   // Set the camera location
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
-
-   m_camera.gluLookAt();
-
-   ActualDraw();
-
-  glClear(GL_ACCUM_BUFFER_BIT);
-   for (int i = 0; i<4; i++)
+   if (m_antialias)
    {
-	   glPushMatrix();
-	   glRotated(i * 10., 0, 1, 0);
-	   ActualDraw();
-	   glPopMatrix();
+	   int antialiasing = m_iterations;
+	   if (antialiasing > 16)
+		   antialiasing = 16;
 
-		glAccum(GL_ACCUM, 0.25);
+	   while (JITTER[antialiasing] == NULL && antialiasing < 16)
+		   antialiasing++;
+
+	   double depth = CGrPoint(m_camera.Eye()).Length3();
+	   
+	   
+
+	   glClear(GL_ACCUM_BUFFER_BIT);
+	   for (int j = 0; j < antialiasing; j++)
+	   {
+		   double m_eyedist = 0.5;
+		   double eyedx = m_eyedist * (double(rand()) / RAND_MAX - 0.5);
+		   double eyedy = m_eyedist * (double(rand()) / RAND_MAX - 0.5);
+
+		   accPerspective(m_camera.FieldOfView(), // Vertical field of view in degrees.
+			   aspectratio, // The aspect ratio.
+			   20., // Near clipping
+			   1000.,
+			   JITTER[antialiasing][j].X(), JITTER[antialiasing][j].Y(),
+			   eyedx, eyedy, depth);
+
+		   
+
+		   m_camera.gluLookAt();
+
+		   ActualDraw();
+
+		   glAccum(GL_ACCUM, float(1.0 / antialiasing));
+
+		   //put the current temp results to display, so no need to swapbutter anymore
+		   glDrawBuffer(GL_FRONT);
+		   glAccum(GL_RETURN, float(antialiasing) / (j + 1));
+		   glDrawBuffer(GL_BACK);
+	   }
+
+	   glAccum(GL_RETURN, 1.0);
    }
+   else
+   {
+	   //
+	   // Set up the camera 
+	   //
 
-   glAccum(GL_RETURN, 1.0);
+	   glMatrixMode(GL_PROJECTION);
+	   glLoadIdentity();
+
+	   // Set the camera parameters
+	   gluPerspective(m_camera.FieldOfView(), // Vertical field of view in degrees.
+		   aspectratio, // The aspect ratio.
+		   20., // Near clipping
+		   1000.); // Far clipping
+
+				   // Set the camera location
+	   glMatrixMode(GL_MODELVIEW);
+	   glLoadIdentity();
+
+	   m_camera.gluLookAt();
+
+	   ActualDraw();
+   }
 
    glFlush();
 }
@@ -245,3 +289,10 @@ void CChildView::Cone(double p_x, double p_y, double p_z,
 
 
 
+
+
+void CChildView::OnFileToggleantial()
+{
+	m_antialias = !m_antialias;
+	Invalidate();
+}
