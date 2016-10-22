@@ -123,9 +123,9 @@ void CChildView::OnGLDraw(CDC *pDC)
 
    m_camera.gluLookAt();
 
-   //ActualDraw();
+   ActualDraw();
 
-   glClear(GL_ACCUM_BUFFER_BIT);
+  glClear(GL_ACCUM_BUFFER_BIT);
    for (int i = 0; i<4; i++)
    {
 	   glPushMatrix();
@@ -133,7 +133,7 @@ void CChildView::OnGLDraw(CDC *pDC)
 	   ActualDraw();
 	   glPopMatrix();
 
-		glAccum(GL_ACCUM, 0.05);
+		glAccum(GL_ACCUM, 0.25);
    }
 
    glAccum(GL_RETURN, 1.0);
